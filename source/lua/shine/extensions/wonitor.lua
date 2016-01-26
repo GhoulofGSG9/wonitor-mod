@@ -227,6 +227,7 @@ function Plugin:SendData( messageType, Params )
     if messageType == nil then return end
     if Params == nil then Params = {} end
 
+    -- NOTE for backwards compatibility
     Params.messageType = messageType
     Params.serverId = self.Config.ServerIdentifier
 
@@ -235,7 +236,7 @@ function Plugin:SendData( messageType, Params )
         if (verbose) then
             Shared.Message( " Wonitor: Sending to server" )
         end
-        Shared.SendHTTPRequest( self.Config.WonitorURL, "POST", { data = jsonData }, OnRecieve )
+        Shared.SendHTTPRequest( self.Config.WonitorURL, "POST", { messageType = messageType, serverId = self.Config.ServerIdentifier, data = jsonData }, OnRecieve )
     end
 end
 
