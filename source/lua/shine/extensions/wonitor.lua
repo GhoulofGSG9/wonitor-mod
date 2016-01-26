@@ -317,7 +317,7 @@ function Plugin:ReportEndGame( Gamerules, winningTeam )
         serverIp       = IPAddressToString( Server.GetIpAddress() ),
         serverPort     = Server.GetPort(),
         serverName     = Server.GetName(),
-        isRookieServer = Server.GetIsRookieFriendly(),
+        isRookieServer = Server.GetHasTag("rookie_only"), --Server.GetIsRookieFriendly(),
         isTournamentMode = Gamerules.tournamentMode,
         version        = Shared.GetBuildNumber(),
         modIds         = CollectActiveModIds(),
