@@ -38,7 +38,7 @@ end
 
 function Plugin:SetGameState( Gamerules, GameState ) // appends to NS2Gamerules:SetGameState(state)
     if (verbose) then
-        Shared.Message( string.format( "Wonitor GameState: new State %d", GameState ) )
+        Shared.Message( string.format( " Wonitor GameState: new State %d", GameState ) )
     end
 
     if GameState == self.LastGameState then return end
@@ -46,7 +46,7 @@ function Plugin:SetGameState( Gamerules, GameState ) // appends to NS2Gamerules:
     if GameState == kGameState.NotStarted then
 
         if (verbose) then
-            Shared.Message( "Wonitor GameState: Not Started" )
+            Shared.Message( " Wonitor GameState: Not Started" )
         end
 
         --if self.LastGameState == kGameState.PreGame then
@@ -63,21 +63,21 @@ function Plugin:SetGameState( Gamerules, GameState ) // appends to NS2Gamerules:
     if GameState == kGameState.PreGame then
         -- round is about to start
         if (verbose) then
-            Shared.Message( "Wonitor GameState: PreGame" )
+            Shared.Message( " Wonitor GameState: PreGame" )
         end
     end
 
     if GameState == kGameState.Countdown then
         -- round is about to start
         if (verbose) then
-            Shared.Message( "Wonitor GameState: Countdown" )
+            Shared.Message( " Wonitor GameState: Countdown" )
         end
     end
 
     if GameState == kGameState.Started then
         -- round started
         if (verbose) then
-            Shared.Message( "Wonitor GameState: Started" )
+            Shared.Message( " Wonitor GameState: Started" )
         end
         self.GameStartTime = Shared.GetTime()
     end
@@ -85,7 +85,7 @@ function Plugin:SetGameState( Gamerules, GameState ) // appends to NS2Gamerules:
     if GameState == kGameState.Team1Won or GameState == kGameState.Team2Won or GameState == kGameState.Draw then
         -- round ended
         if (verbose) then
-            Shared.Message( string.format( "Wonitor GameState: Round Ended %d", GameState ) )
+            Shared.Message( string.format( " Wonitor GameState: Round Ended %d", GameState ) )
         end
 
         local winningTeam = nil
@@ -104,7 +104,7 @@ end
 
 function Plugin:ReportEndGame( Gamerules, winningTeam )
     if (verbose) then
-        Shared.Message( "Wonitor EndGame" )
+        Shared.Message( " Wonitor EndGame" )
     end
     local gameTime = Shared.GetTime() - self.GameStartTime
 
@@ -115,6 +115,7 @@ function Plugin:ReportEndGame( Gamerules, winningTeam )
 
     local teamSkill = 0;
     local function SumTeamSkill( player )
+        if not HasMixin(player, "Scoring") then return end
         local skill = player:GetPlayerSkill()
         if  skill ~= -1 then
             teamSkill = teamSkill + skill
@@ -152,7 +153,7 @@ function Plugin:ReportEndGame( Gamerules, winningTeam )
     end
 
     local function CollectActiveModIds()
-        modIds = {}
+        local modIds = {}
         for modNum = 1, Server.GetNumActiveMods() do
             modIds[modNum] = Server.GetActiveModId( modNum )
         end
@@ -164,7 +165,7 @@ function Plugin:ReportEndGame( Gamerules, winningTeam )
         serverIp       = IPAddressToString( Server.GetIpAddress() ),
         serverPort     = Server.GetPort(),
         serverName     = Server.GetName(),
-        isRookieServer = Server.GetIsRookieFriendly(),
+        isRookieServer = Server.GetHasTag("rookie_only"), --Server.GetIsRookieFriendly(),
         isTournamentMode = Gamerules.tournamentMode,
         version        = Shared.GetBuildNumber(),
         modIds         = CollectActiveModIds(),
@@ -217,7 +218,7 @@ end
 
 local function OnRecieve(data)
     if (verbose) then
-        Shared.Message("Wonitor: response:" .. data)
+        Shared.Message(" Wonitor: response:" .. data)
     end
 end
 
@@ -232,7 +233,7 @@ function Plugin:SendData( messageType, Params )
     local jsonData, jsonError = json.encode( Params )
     if jsonData and not jsonError then
         if (verbose) then
-            Shared.Message( "Wonitor: Sending to server" )
+            Shared.Message( " Wonitor: Sending to server" )
         end
         Shared.SendHTTPRequest( self.Config.WonitorURL, "POST", { data = jsonData }, OnRecieve )
     end
