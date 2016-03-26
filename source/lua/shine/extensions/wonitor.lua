@@ -249,6 +249,8 @@ function Plugin:OnEndGame( Gamerules, WinningTeam ) -- appends to NS2Gamerules:E
                         killEvent.killerSteamID,
                         killEvent.killerLocation,
                         FormatCoordinates(killEvent.killerPosition),
+                        killEvent.doerLocation,
+                        FormatCoordinates(killEvent.doerPosition)
                     })
                 end
             end
