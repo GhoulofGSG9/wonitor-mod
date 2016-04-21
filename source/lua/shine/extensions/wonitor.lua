@@ -13,6 +13,7 @@ Plugin.NS2Only = true --Set to true to disable the plugin in NS2: Combat if you 
 Plugin.DefaultConfig = {
     WonitorURL = "",
     ServerIdentifier = "",
+    SendWonitorStats = true,
     SendNS2PlusStats = false,
     SendNS2PlusStatsKillFeed = false,
 }
@@ -261,112 +262,114 @@ end
 
 
 function Plugin:ReportEndGame( Gamerules, winningTeam )
-    if (verbose) then
-        Shared.Message(" Wonitor: ReportEndGame")
-    end
-
-    local gameTime = Shared.GetTime() - self.GameStartTime
-    local winningTeamType = winningTeam and winningTeam.GetTeamType and winningTeam:GetTeamType() or kNeutralTeamType
-    local numHives = Gamerules:GetTeam2():GetNumCapturedTechPoints();
-    local numCCs   = Gamerules:GetTeam1():GetNumCapturedTechPoints();
-    local teams = Gamerules:GetTeams()
-    local teamStats = {}
-    local teamSkill = 0;
-
-    local function SumTeamSkill( player )
-        if not HasMixin(player, "Scoring") then return end
-        local skill = player:GetPlayerSkill()
-        if  skill ~= -1 then
-            teamSkill = teamSkill + skill
-        end
-    end
-
-    for teamIndex, team in ipairs( teams ) do
-        local numPlayers, numRookies = team:GetNumPlayers()
-
-        local teamNumber = team:GetTeamNumber()
-        local teamInfo = GetEntitiesForTeam("TeamInfo", teamNumber)
-        local kills = 0
-        local rtCount = 0
-        if table.count(teamInfo) > 0 then
-            kills = teamInfo[1]:GetKills()
-            rtCount = teamInfo[1]:GetNumCapturedResPoints()
+    if self.Config.SendWonitorStats then
+        if (verbose) then
+            Shared.Message(" Wonitor: ReportEndGame")
         end
 
-        teamSkill = 0
-        team:ForEachPlayer( SumTeamSkill )
+        local gameTime = Shared.GetTime() - self.GameStartTime
+        local winningTeamType = winningTeam and winningTeam.GetTeamType and winningTeam:GetTeamType() or kNeutralTeamType
+        local numHives = Gamerules:GetTeam2():GetNumCapturedTechPoints();
+        local numCCs   = Gamerules:GetTeam1():GetNumCapturedTechPoints();
+        local teams = Gamerules:GetTeams()
+        local teamStats = {}
+        local teamSkill = 0;
 
-        teamStats[teamIndex] = {numPlayers=numPlayers, numRookies=numRookies, teamSkill=teamSkill, rtCount=rtCount, kills=kills}
-    end
-
-    local gameInfo = GetGameInfoEntity()
-
-    local InitialHiveTechIdString = "None"
-    if Gamerules.initialHiveTechId then
-        InitialHiveTechIdString = EnumToString( kTechId, Gamerules.initialHiveTechId )
-    end
-
-    local function CollectActiveModIds()
-        local modIds = {}
-        for modNum = 1, Server.GetNumActiveMods() do
-            modIds[modNum] = Server.GetActiveModId( modNum )
+        local function SumTeamSkill( player )
+            if not HasMixin(player, "Scoring") then return end
+            local skill = player:GetPlayerSkill()
+            if  skill ~= -1 then
+                teamSkill = teamSkill + skill
+            end
         end
-        return modIds
+
+        for teamIndex, team in ipairs( teams ) do
+            local numPlayers, numRookies = team:GetNumPlayers()
+
+            local teamNumber = team:GetTeamNumber()
+            local teamInfo = GetEntitiesForTeam("TeamInfo", teamNumber)
+            local kills = 0
+            local rtCount = 0
+            if table.count(teamInfo) > 0 then
+                kills = teamInfo[1]:GetKills()
+                rtCount = teamInfo[1]:GetNumCapturedResPoints()
+            end
+
+            teamSkill = 0
+            team:ForEachPlayer( SumTeamSkill )
+
+            teamStats[teamIndex] = {numPlayers=numPlayers, numRookies=numRookies, teamSkill=teamSkill, rtCount=rtCount, kills=kills}
+        end
+
+        local gameInfo = GetGameInfoEntity()
+
+        local InitialHiveTechIdString = "None"
+        if Gamerules.initialHiveTechId then
+            InitialHiveTechIdString = EnumToString( kTechId, Gamerules.initialHiveTechId )
+        end
+
+        local function CollectActiveModIds()
+            local modIds = {}
+            for modNum = 1, Server.GetNumActiveMods() do
+                modIds[modNum] = Server.GetActiveModId( modNum )
+            end
+            return modIds
+        end
+
+        local Params = {
+            -- server
+            serverIp       = IPAddressToString( Server.GetIpAddress() ),
+            serverPort     = Server.GetPort(),
+            serverName     = Server.GetName(),
+            isRookieServer = Server.GetHasTag("rookie_only"), --Server.GetIsRookieFriendly(),
+            isTournamentMode = Gamerules.tournamentMode,
+            version        = Shared.GetBuildNumber(),
+            modIds         = CollectActiveModIds(),
+            time           = Shared.GetGMTString( false ),
+
+            -- round
+            map             = Shared.GetMapName(),
+            length          = tonumber( string.format( "%.2f", gameTime ) ),
+            startLocation1  = Gamerules.startingLocationNameTeam1,
+            startLocation2  = Gamerules.startingLocationNameTeam2,
+            startPathDistance = Gamerules.startingLocationsPathDistance,
+            startHiveTech   = InitialHiveTechIdString,
+            winner          = winningTeamType,
+
+            -- players
+            numPlayers1     = teamStats[1].numPlayers,
+            numPlayers2     = teamStats[2].numPlayers,
+            numPlayersRR    = teamStats[3].numPlayers,
+            numPlayersSpec  = teamStats[4].numPlayers,
+            numPlayers      = Server.GetNumPlayers(), -- gameInfo:GetNumPlayersTotal(), Server.GetNumPlayers(), Server.GetNumPlayersTotal()
+            maxPlayers      = Server.GetMaxPlayers(),
+
+            numRookies1     = teamStats[1].numRookies,
+            numRookies2     = teamStats[2].numRookies,
+            numRookiesRR    = teamStats[3].numRookies,
+            numRookiesSpec  = teamStats[4].numRookies,
+            numRookies      = teamStats[1].numRookies+teamStats[2].numRookies+teamStats[3].numRookies+teamStats[4].numRookies,
+
+            skillTeam1      = teamStats[1].teamSkill,
+            skillTeam2      = teamStats[2].teamSkill,
+            averageSkill    = gameInfo:GetAveragePlayerSkill(),
+            killsTeam1      = teamStats[1].kills,
+            killsTeam2      = teamStats[2].kills,
+            kills           = teamStats[1].kills+teamStats[2].kills,
+
+            -- buildings
+            numRTs1         = teamStats[1].rtCount,
+            numRTs2         = teamStats[2].rtCount,
+            numRTs          = teamStats[1].rtCount+teamStats[2].rtCount,
+            numHives        = numHives,
+            numCCs          = numCCs,
+            numTechPointsCaptured = numHives+numCCs,
+
+            --upgrades
+            biomassLevel    = Gamerules:GetTeam2():GetBioMassLevel()
+        }
+        self:SendData( "MatchEnd", Params )
     end
-
-    local Params = {
-        -- server
-        serverIp       = IPAddressToString( Server.GetIpAddress() ),
-        serverPort     = Server.GetPort(),
-        serverName     = Server.GetName(),
-        isRookieServer = Server.GetHasTag("rookie_only"), --Server.GetIsRookieFriendly(),
-        isTournamentMode = Gamerules.tournamentMode,
-        version        = Shared.GetBuildNumber(),
-        modIds         = CollectActiveModIds(),
-        time           = Shared.GetGMTString( false ),
-
-        -- round
-        map             = Shared.GetMapName(),
-        length          = tonumber( string.format( "%.2f", gameTime ) ),
-        startLocation1  = Gamerules.startingLocationNameTeam1,
-        startLocation2  = Gamerules.startingLocationNameTeam2,
-        startPathDistance = Gamerules.startingLocationsPathDistance,
-        startHiveTech   = InitialHiveTechIdString,
-        winner          = winningTeamType,
-
-        -- players
-        numPlayers1     = teamStats[1].numPlayers,
-        numPlayers2     = teamStats[2].numPlayers,
-        numPlayersRR    = teamStats[3].numPlayers,
-        numPlayersSpec  = teamStats[4].numPlayers,
-        numPlayers      = Server.GetNumPlayers(), -- gameInfo:GetNumPlayersTotal(), Server.GetNumPlayers(), Server.GetNumPlayersTotal()
-        maxPlayers      = Server.GetMaxPlayers(),
-
-        numRookies1     = teamStats[1].numRookies,
-        numRookies2     = teamStats[2].numRookies,
-        numRookiesRR    = teamStats[3].numRookies,
-        numRookiesSpec  = teamStats[4].numRookies,
-        numRookies      = teamStats[1].numRookies+teamStats[2].numRookies+teamStats[3].numRookies+teamStats[4].numRookies,
-
-        skillTeam1      = teamStats[1].teamSkill,
-        skillTeam2      = teamStats[2].teamSkill,
-        averageSkill    = gameInfo:GetAveragePlayerSkill(),
-        killsTeam1      = teamStats[1].kills,
-        killsTeam2      = teamStats[2].kills,
-        kills           = teamStats[1].kills+teamStats[2].kills,
-
-        -- buildings
-        numRTs1         = teamStats[1].rtCount,
-        numRTs2         = teamStats[2].rtCount,
-        numRTs          = teamStats[1].rtCount+teamStats[2].rtCount,
-        numHives        = numHives,
-        numCCs          = numCCs,
-        numTechPointsCaptured = numHives+numCCs,
-
-        --upgrades
-        biomassLevel    = Gamerules:GetTeam2():GetBioMassLevel()
-    }
-    self:SendData( "MatchEnd", Params )
 end
 
 
