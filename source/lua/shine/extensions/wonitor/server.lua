@@ -425,13 +425,6 @@ function Plugin:CreateCommands()
 	end
 	local WonitorstatsCommand = self:BindCommand( "sh_wonitorstats", "wonitorstats", Wonitorstats, true )
 	WonitorstatsCommand:Help( "Shows Wonitor Site" )
-
-	local function ShowWonitorstats( _, Target )
-		self:ShowWonitorstats( Target )
-	end
-	local ShowWonitorstatsCommand = self:BindCommand( "sh_showwonitorstats", "showwonitorstats", ShowWonitorstats)
-	ShowWonitorstatsCommand:AddParam{ Type = "client" }
-	ShowWonitorstatsCommand:Help( "<player> Shows Wonitor page to the given player." )
 end
 
 
