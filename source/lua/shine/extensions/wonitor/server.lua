@@ -406,25 +406,15 @@ function Plugin:SendData( messageType, Params )
 end
 
 
-function Plugin:ShowWonitorstats( Client )
+function Plugin.ShowWonitorStats( Client )
 	if not Shine:IsValidClient( Client ) then return end
-
-	Shine.SendNetworkMessage( Client, "Shine_Web", {
-		URL = self.Config.MenuEntryUrl,
-		Title = "Wonitor"
-	}, true )
+    Plugin:SendNetworkMessage( Client, "OpenWebpageInSteam", { URL = Plugin.Config.MenuEntryUrl }, true )
 end
 
 
 function Plugin:CreateCommands()
-
-	local function Wonitorstats( Client )
-		if not Client then return end
-
-		self:ShowWonitorstats( Client )
-	end
-	local WonitorstatsCommand = self:BindCommand( "sh_wonitorstats", "wonitorstats", Wonitorstats, true )
-	WonitorstatsCommand:Help( "Shows Wonitor Site" )
+     self:BindCommand( "sh_wonitor", "wonitor", Plugin.ShowWonitorStats, true )
+         :Help( "Shows Wonitor Site" )
 end
 
 

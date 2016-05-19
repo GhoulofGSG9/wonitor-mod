@@ -21,7 +21,7 @@ function Plugin:UpdateMenuEntry( NewValue )
             function( Menu )
 	            self.MenuEntry = Menu:AddSideButton( self.dt.MenuEntryName,
                     function()
-                        Menu.GenericClick( "sh_wonitorstats" )
+                        Menu.GenericClick( "sh_wonitor" )
                     end
                 )
 
@@ -31,6 +31,11 @@ function Plugin:UpdateMenuEntry( NewValue )
 	else
 		self.MenuEntry:SetIsVisible( NewValue )
 	end
+end
+
+
+function Plugin:ReceiveOpenWebpageInSteam( Data )
+	 Client.ShowWebpage( Data.URL )
 end
 
 

@@ -8,6 +8,7 @@ local Plugin = {}
 function Plugin:SetupDataTable()
 	self:AddDTVar( "boolean", "ShowMenuEntry", true )
     self:AddDTVar( "string (64)", "MenuEntryName", "Wonitor" )
+	self:AddNetworkMessage( "OpenWebpageInSteam", { URL = "string (255)" }, "Client" )
 end
 
 
