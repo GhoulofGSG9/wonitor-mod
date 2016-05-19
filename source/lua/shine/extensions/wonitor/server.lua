@@ -1,11 +1,11 @@
 --[[
-Shine wonitor plugin
+    Shine wonitor plugin
 ]]
 
 local Shine = Shine
-local Plugin = {}
-Plugin.Version = "1.0"
+local Plugin = Plugin
 
+Plugin.Version = "2.0"
 Plugin.HasConfig = true --Does this plugin have a config file?
 Plugin.ConfigName = "wonitor.json" --What's the name of the file?
 Plugin.DefaultState = true --Should the plugin be enabled when it is first added to the config?
@@ -16,6 +16,9 @@ Plugin.DefaultConfig = {
     SendWonitorStats = true,
     SendNS2PlusStats = false,
     SendNS2PlusStatsKillFeed = false,
+    ShowMenuEntry = true,
+    MenuEntryUrl = "",
+    MenuEntryName = "Wonitor"
 }
 Plugin.CheckConfig = true --Should we check for missing/unused entries when loading?
 Plugin.CheckConfigTypes = true --Should we check the types of values in the config to make sure they match our default's types?
@@ -23,6 +26,8 @@ local verbose = true
 
 
 function Plugin:Initialise()
+
+    self:CreateCommands()
 
     if self.Config.WonitorURL == "" then
         return false, "You have not provided a path to the wonitor server. See readme."
@@ -33,6 +38,9 @@ function Plugin:Initialise()
     end
 
     Shine.Hook.SetupClassHook( "NS2Gamerules", "EndGame", "OnEndGame", "PassivePost" )
+
+    self.dt.ShowMenuEntry = self.Config.ShowMenuEntry
+    self.dt.MenuEntryName = self.Config.MenuEntryName
 
     self.Enabled = true
     self.LastGameState = kGameState.NotStarted
@@ -398,6 +406,35 @@ function Plugin:SendData( messageType, Params )
 end
 
 
+function Plugin:ShowWonitorstats( Client )
+	if not Shine:IsValidClient( Client ) then return end
+
+	Shine.SendNetworkMessage( Client, "Shine_Web", {
+		URL = self.Config.MenuEntryUrl,
+		Title = "Wonitor"
+	}, true )
+end
+
+
+function Plugin:CreateCommands()
+
+	local function Wonitorstats( Client )
+		if not Client then return end
+
+		self:ShowWonitorstats( Client )
+	end
+	local WonitorstatsCommand = self:BindCommand( "sh_wonitorstats", "wonitorstats", Wonitorstats, true )
+	WonitorstatsCommand:Help( "Shows Wonitor Site" )
+
+	local function ShowWonitorstats( _, Target )
+		self:ShowWonitorstats( Target )
+	end
+	local ShowWonitorstatsCommand = self:BindCommand( "sh_showwonitorstats", "showwonitorstats", ShowWonitorstats)
+	ShowWonitorstatsCommand:AddParam{ Type = "client" }
+	ShowWonitorstatsCommand:Help( "<player> Shows Wonitor page to the given player." )
+end
+
+
 function Plugin:Cleanup()
     self.LastGameState = nil
     self.GameStartTime = nil
@@ -406,6 +443,3 @@ function Plugin:Cleanup()
 
     self.Enabled = false
 end
-
-
-Shine:RegisterExtension( "wonitor", Plugin )
