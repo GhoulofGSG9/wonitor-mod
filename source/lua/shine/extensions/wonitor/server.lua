@@ -194,7 +194,7 @@ function Plugin:OnEndGame( Gamerules, WinningTeam ) -- appends to NS2Gamerules:E
         if not CHUDGetLastRoundStats then return end -- NS2+ mod not loaded
 
         local NS2PlusStats = CHUDGetLastRoundStats()
-        Dump(NS2PlusStats)
+        -- Dump(NS2PlusStats)
         if next(NS2PlusStats) == nil then
             if (verbose) then
                 Shared.Message(" Wonitor: No data gathered for this round")
@@ -206,11 +206,65 @@ function Plugin:OnEndGame( Gamerules, WinningTeam ) -- appends to NS2Gamerules:E
         data.RoundInfo       = NS2PlusStats.RoundInfo
         data.Locations       = NS2PlusStats.Locations
         data.MarineCommStats = NS2PlusStats.MarineCommStats
-        data.PlayerStats     = NS2PlusStats.PlayerStats
         data.ServerInfo      = NS2PlusStats.ServerInfo
+        data.PlayerStats     = NS2PlusStats.PlayerStats
         local Research       = NS2PlusStats.Research
         local Buildings      = NS2PlusStats.Buildings
         local KillFeed       = NS2PlusStats.KillFeed
+
+        local function compressPlayerRoundStats(pStats)
+            return {
+                pStats.timePlayed,
+                pStats.timeBuilding,
+                pStats.commanderTime,
+                pStats.kills,
+                pStats.assists,
+                pStats.deaths,
+                pStats.killstreak,
+                pStats.hits,
+                pStats.onosHits,
+                pStats.misses,
+                pStats.playerDamage,
+                pStats.structureDamage,
+                pStats.score,
+            }
+        end
+
+        local function compressPlayerClassStats(cStats)
+            local status = {}
+            for _ , classStat in ipairs( cStats ) do
+                table.insert(status, {
+                    classStat.statusId,
+                    classStat.classTime,
+                })
+            end
+            return status
+        end
+
+        local function compressPlayerWeaponStats(wStats)
+            return {
+                wStats.teamNumber,
+                wStats.hits,
+                wStats.onosHits,
+                wStats.misses,
+                wStats.playerDamage,
+                wStats.structureDamage,
+                wStats.kills,
+            }
+        end
+
+        if type(data.PlayerStats == "table") then
+            for _ , playerStat in pairs( data.PlayerStats ) do
+                -- compress the data for transmission
+                playerStat[1] = compressPlayerRoundStats(playerStat[1])
+                playerStat[2] = compressPlayerRoundStats(playerStat[2])
+                playerStat.status = compressPlayerClassStats(playerStat.status)
+
+                for weapon , weaponStat in pairs( playerStat.weapons ) do
+                    playerStat.weapons[weapon] = compressPlayerWeaponStats(weaponStat)
+                end
+            end
+        end
 
         data.Research = {}
         if type(Research == "table") then
