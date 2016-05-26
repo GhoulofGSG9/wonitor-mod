@@ -4,7 +4,7 @@ Shine wonitor plugin
 
 local Shine = Shine
 local Plugin = {}
-Plugin.Version = "1.0"
+Plugin.Version = "1.1"
 
 Plugin.HasConfig = true --Does this plugin have a config file?
 Plugin.ConfigName = "wonitor.json" --What's the name of the file?
@@ -14,7 +14,7 @@ Plugin.DefaultConfig = {
     WonitorURL = "",
     ServerIdentifier = "",
 }
-Plugin.CheckConfig = true --Should we check for missing/unused entries when loading?
+Plugin.CheckConfig = false --Should we check for missing/unused entries when loading?
 Plugin.CheckConfigTypes = true --Should we check the types of values in the config to make sure they match our default's types?
 local verbose = false
 
@@ -196,7 +196,7 @@ function Plugin:ReportEndGame( Gamerules, winningTeam )
 
         skillTeam1      = teamStats[1][3],
         skillTeam2      = teamStats[2][3],
-        averageSkill    = gameInfo:GetAveragePlayerSkill(),
+        averageSkill    = gameInfo:GetAveragePlayerSkill() or 0,
         killsTeam1      = teamStats[1][5],
         killsTeam2      = teamStats[2][5],
         kills           = teamStats[1][5]+teamStats[2][5],
