@@ -22,7 +22,7 @@ Plugin.DefaultConfig = {
 }
 Plugin.CheckConfig = true --Should we check for missing/unused entries when loading?
 Plugin.CheckConfigTypes = true --Should we check the types of values in the config to make sure they match our default's types?
-local verbose = true
+local verbose = false
 
 
 function Plugin:Initialise()
@@ -147,6 +147,9 @@ function Plugin:SetGameState( Gamerules, GameState ) -- appends to NS2Gamerules:
         elseif GameState == kGameState.Team2Won then
             winningTeam = Gamerules:GetTeam2()
         end
+        -- Shared.SendHTTPRequest( self.Config.WonitorURL, "POST", { } )
+        -- Shared.SendHTTPRequest( self.Config.WonitorURL, "POST", { hello = "world" } )
+        -- Shared.Message(" Wonitor: Sending Empty Messages")
         self:ReportEndGame( Gamerules, winningTeam )
         self.GameStartTime = 0
     end
