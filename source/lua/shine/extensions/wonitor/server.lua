@@ -49,7 +49,7 @@ function Plugin:Initialise()
     return true
 end
 
-
+--[[
 local function Dump(variable, name, depth)
     if name == nil then name = "(this)" end
     if depth == nil then depth = 0 end
@@ -87,7 +87,7 @@ local function Dump(variable, name, depth)
         Shared.Message(name .. ' = (' .. type(variable).. ')')
     end
 end
-
+]]
 
 function Plugin:SetGameState( Gamerules, GameState ) -- appends to NS2Gamerules:SetGameState(state) via Shine GlobalHooks
     if (verbose) then
@@ -189,7 +189,7 @@ end
 
 
 function Plugin:OnEndGame( Gamerules, WinningTeam ) -- appends to NS2Gamerules:EndGame(WinningTeam) via SetupClassHook
-    if self.Config.SendNS2PlusStats and CHUDGetLastRoundStats then
+    if self.Config.SendNS2PlusStats and CHUDGetLastRoundStats and not Shared.GetCheatsEnabled() then
         if (verbose) then
             Shared.Message(" Wonitor: Saving NS2+ Stats")
         end
@@ -327,7 +327,7 @@ end
 
 
 function Plugin:ReportEndGame( Gamerules, winningTeam )
-    if self.Config.SendWonitorStats then
+    if self.Config.SendWonitorStats and not Shared.GetCheatsEnabled() then
         if (verbose) then
             Shared.Message(" Wonitor: ReportEndGame")
         end
