@@ -49,7 +49,7 @@ function Plugin:Initialise()
     return true
 end
 
---[[
+
 local function Dump(variable, name, depth)
     if name == nil then name = "(this)" end
     if depth == nil then depth = 0 end
@@ -87,7 +87,7 @@ local function Dump(variable, name, depth)
         Shared.Message(name .. ' = (' .. type(variable).. ')')
     end
 end
-]]
+
 
 function Plugin:SetGameState( Gamerules, GameState ) -- appends to NS2Gamerules:SetGameState(state) via Shine GlobalHooks
     if (verbose) then
