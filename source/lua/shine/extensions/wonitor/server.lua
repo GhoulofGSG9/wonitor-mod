@@ -50,41 +50,55 @@ function Plugin:Initialise()
 end
 
 
-local function Dump(variable, name, depth)
-    if name == nil then name = "(this)" end
-    if depth == nil then depth = 0 end
+local function Dump(variable, name, maxdepth, depth)
+    if name == nil then
+        name = '(this)'
+    end
 
-    if type(variable) == "nil" then
-        Shared.Message(name .. ' = (nil)')
-    elseif type(variable) == "number" then
-        Shared.Message(name .. ' = ' .. variable)
-    elseif type(variable) == "boolean" then
+    if maxdepth == nil then
+        maxdepth = 5
+    end
+
+    if depth == nil then
+        depth = 0
+    end
+
+    if type(variable) == 'nil' then
+        Print(name .. ' = (nil)')
+    elseif type(variable) == 'number' then
+        Print(name .. ' = ' .. variable)
+    elseif type(variable) == 'boolean' then
         if variable then
-            Shared.Message(name .. ' = true')
+            Print(name .. ' = true')
         else
-            Shared.Message(name .. ' = false')
+            Print(name .. ' = false')
         end
-    elseif type(variable) == "string" then
-        Shared.Message(name .. ' = "' .. variable .. '"')
-    elseif type(variable) == "table" then
-        Shared.Message(name .. ' = (' .. type(variable).. ')')
-        for i, v in pairs( variable ) do
-            if type(i)~="userdata" then
-                if v == _G then
-                    Shared.Message(name .. "." .. i)
-                elseif v~=variable then
-                    if depth >= 5 then
-                        Shared.Message(name .. "." .. i .. " (...)")
+    elseif type(variable) == 'string' then
+        Print(name .. ' = "' .. variable .. '"')
+    elseif type(variable) == 'table' then
+        Print(name .. ' = (' .. type(variable) .. ')')
+
+        for i, v in pairs(variable) do
+            if type(i) ~= 'userdata' then
+                if v == _G then -- because _G._G == _G
+                    Print(name .. '.' .. i)
+                elseif v ~= variable then
+                    if depth >= maxdepth then
+                        Print(name .. '.' .. i .. ' (...)')
                     else
-                        Dump(v, name .. '.' .. i, depth+1)
+                        Dump(v, name .. '.' .. i, maxdepth, depth + 1)
                     end
-                else -- _G._G = _G
-                   Shared.Message(name .. "." .. i)
+                else
+                    Print(name .. '.' .. i .. ' = ' .. name)
                 end
             end
         end
     else -- function, userdata, thread, cdata
-        Shared.Message(name .. ' = (' .. type(variable).. ')')
+        Print(name .. ' = (' .. type(variable) .. ')')
+
+        if getmetatable(variable) and getmetatable(variable).__towatch then
+            Dump(getmetatable(variable).__towatch, name .. ' (' .. type(variable) .. ')', maxdepth, depth + 1)
+        end
     end
 end
 
