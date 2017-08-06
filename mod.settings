@@ -1,10 +1,12 @@
 name        = "[Shine] Wonitor"
 source_dir  = "source"
 output_dir  = "output"
-description = [=[Collects server-side statistics and sends them to a webserver.
-
-Mod id: 235ee3a6
-
+description = [=[Collects server-side statistics and sends them to a webserver.
+
+Mod id: 235ee3a6
+
 The web server part can be found at https://github.com/eBrute/wonitor]=]
 image       = "preview.jpg"
+tag_modtype = "Tool"
+tag_support = "Must be run on Server"
 publish_id = "235ee3a6"
