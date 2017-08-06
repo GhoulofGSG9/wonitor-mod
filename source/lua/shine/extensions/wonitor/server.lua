@@ -5,7 +5,7 @@
 local Shine = Shine
 local Plugin = Plugin
 
-Plugin.Version = "2.0"
+Plugin.Version = "2.1"
 Plugin.HasConfig = true --Does this plugin have a config file?
 Plugin.ConfigName = "wonitor.json" --What's the name of the file?
 Plugin.DefaultState = true --Should the plugin be enabled when it is first added to the config?
@@ -334,8 +334,8 @@ function Plugin:ReportEndGame( Gamerules, winningTeam )
 
         local gameTime = Shared.GetTime() - self.GameStartTime
         local winningTeamType = winningTeam and winningTeam.GetTeamType and winningTeam:GetTeamType() or kNeutralTeamType
-        local numHives = Gamerules:GetTeam2():GetNumCapturedTechPoints();
-        local numCCs   = Gamerules:GetTeam1():GetNumCapturedTechPoints();
+        local numHives = Gamerules:GetTeam2().GetNumCapturedTechPoints and Gamerules:GetTeam2():GetNumCapturedTechPoints() or 0;
+        local numCCs   = Gamerules:GetTeam1().GetNumCapturedTechPoints and Gamerules:GetTeam1():GetNumCapturedTechPoints() or 0;
         local teams = Gamerules:GetTeams()
         local teamStats = {}
         local teamSkill = 0;
@@ -356,8 +356,8 @@ function Plugin:ReportEndGame( Gamerules, winningTeam )
             local kills = 0
             local rtCount = 0
             if table.count(teamInfo) > 0 then
-                kills = teamInfo[1]:GetKills()
-                rtCount = teamInfo[1]:GetNumCapturedResPoints()
+                kills = teamInfo[1].GetKills and teamInfo[1]:GetKills() or 0
+                rtCount = teamInfo[1].GetNumCapturedResPoints and teamInfo[1]:GetNumCapturedResPoints() or 0
             end
 
             teamSkill = 0
@@ -431,7 +431,7 @@ function Plugin:ReportEndGame( Gamerules, winningTeam )
             numTechPointsCaptured = numHives+numCCs,
 
             --upgrades
-            biomassLevel    = Gamerules:GetTeam2():GetBioMassLevel()
+            biomassLevel    = Gamerules:GetTeam2().GetBioMassLevel and Gamerules:GetTeam2():GetBioMassLevel() or 0
         }
         self:SendData( "MatchEnd", Params )
     end
